@@ -22,13 +22,14 @@ fighting a local toolchain.
 | File | Purpose |
 | ---- | ------- |
 | [Dockerfile](Dockerfile) | Base image, build deps, pinned Rust + wasm-pack |
-| [devcontainer.json](devcontainer.json) | Dev Containers config: mount, extensions, forwarded ports |
+| [.devcontainer/devcontainer.json](.devcontainer/devcontainer.json) | Dev Containers config: mount, extensions, forwarded ports |
 | [.dockerignore](.dockerignore) | Exclude `node_modules` and `.git` from the build context |
 
 ## Use with VS Code
 
 1. Clone the JSQL-NEO repository.
-2. Copy `Dockerfile`, `devcontainer.json`, and `.dockerignore` into the repo root.
+2. Copy `Dockerfile` and `.dockerignore` into the repo root, and `devcontainer.json`
+   into `.devcontainer/`.
 3. Reopen the folder in a Dev Container (remote container extension / `Dev Containers: Reopen in Container`).
    Extensions install automatically and the workspace is mounted at `/workspace`.
 4. Run `npm install` once inside the container. `postCreateCommand` is intentionally
