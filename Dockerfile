@@ -26,7 +26,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
         --default-toolchain ${RUST_VERSION} \
         --profile minimal \
         --target wasm32-unknown-unknown \
-        --component rustfmt clippy \
+    && rustup component add rustfmt clippy \
     && chown -R node:node /usr/local/cargo /usr/local/rustup
 
 # wasm-pack: pinned version, direct static tarball into /usr/local/bin.
