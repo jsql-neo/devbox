@@ -6,16 +6,17 @@
   "mounts": [
     "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
   ],
+  "remoteUser": "node",
   "customizations": {
     "vscode": {
       "extensions": [
         "rust-lang.rust-analyzer",
+        "tamasfe.even-better-toml",
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
         "ms-vscode.js-debug"
       ]
     }
   },
-  "postCreateCommand": "npm install",
   "forwardPorts": [3306, 5432, 27017, 6379, 8080]
 }
