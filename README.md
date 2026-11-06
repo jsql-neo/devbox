@@ -21,9 +21,20 @@ fighting a local toolchain.
 
 | File | Purpose |
 | ---- | ------- |
-| [Dockerfile](Dockerfile) | Base image, build deps, pinned Rust + wasm-pack |
-| [.devcontainer/devcontainer.json](.devcontainer/devcontainer.json) | Dev Containers config: mount, extensions, forwarded ports |
+| [Dockerfile](Dockerfile) | Base image, build deps, pinned Rust + wasm-pack, `clone-jsql.sh` helper |
+| [.devcontainer/devcontainer.json](.devcontainer/devcontainer.json) | Dev Containers config: mount, extensions, forwarded ports, auto-clone hook |
 | [.dockerignore](.dockerignore) | Exclude `node_modules` and `.git` from the build context |
+
+## Auto-clone on start
+
+On every container start the `postStartCommand` hook runs `/usr/local/bin/clone-jsql.sh`, which:
+
+- clones `https://github.com/vexify-org/JSQL-neo` into `/workspace/jsql-neo` if absent;
+- runs `git pull --ff-only` if it already exists.
+
+It is **idempotent** — safe to run on every restart, and it never touches a dirty
+working tree (a failed fast-forward is reported, not forced). If `/workspace` is not
+writable by the `node` user, it falls back to `/home/node/jsql-neo`.
 
 ## Use with VS Code
 

@@ -18,5 +18,6 @@
       ]
     }
   },
-  "forwardPorts": [3306, 5432, 27017, 6379, 8080]
+  "forwardPorts": [3306, 5432, 27017, 6379, 8080],
+  "postStartCommand": "bash /usr/local/bin/clone-jsql.sh"
 }

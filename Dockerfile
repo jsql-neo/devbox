@@ -40,5 +40,32 @@ RUN curl -fsSL "https://github.com/rustwasm/wasm-pack/releases/download/v${WASMP
     && chmod +x /usr/local/bin/wasm-pack \
     && rm -rf "/tmp/wasm-pack-v${WASMPACK_VERSION}-x86_64-unknown-linux-musl"
 
+# Pre-create the clone target and hand it to the `node` user. /workspace is a bind
+# mount at runtime (host ownership wins), but this keeps the image self-consistent.
+RUN mkdir -p /workspace/jsql-neo && chown -R node:node /workspace
+
+# Auto-clone helper: on every container start (devcontainer postStartCommand)
+# clone JSQL-NEO into /workspace/jsql-neo, or fast-forward pull if already present.
+# Idempotent by design — safe to run repeatedly.
+RUN printf '%s\n' \
+        '#!/bin/bash' \
+        'set -e' \
+        'REPO_URL="https://github.com/vexify-org/JSQL-neo"' \
+        'DEST=/workspace/jsql-neo' \
+        'if [ ! -w /workspace ] && [ ! -w "$DEST" ]; then' \
+        '  DEST=/home/node/jsql-neo' \
+        '  echo "[clone-jsql] /workspace not writable, using $DEST"' \
+        'fi' \
+        'if [ -d "$DEST/.git" ]; then' \
+        '  echo "[clone-jsql] $DEST exists, pulling..."' \
+        '  git -C "$DEST" pull --ff-only || echo "[clone-jsql] pull failed (dirty tree?), keeping existing checkout" >&2' \
+        'else' \
+        '  echo "[clone-jsql] cloning $REPO_URL -> $DEST"' \
+        '  git clone "$REPO_URL" "$DEST" || echo "[clone-jsql] clone failed (network?), continuing without sources" >&2' \
+        'fi' \
+        > /usr/local/bin/clone-jsql.sh \
+    && chmod +x /usr/local/bin/clone-jsql.sh \
+    && chown node:node /usr/local/bin/clone-jsql.sh
+
 USER node
 WORKDIR /workspace
