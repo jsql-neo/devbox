@@ -40,7 +40,9 @@ N-API native module and the WASM targets without fighting a local setup.
   `JSQL_REF=v6.6.4`, or `JSQL_REF=` for the moving default branch), so every
   container start yields the same sources instead of drifting with `HEAD`.
 - **Idempotent and self-healing.** An existing checkout is re-checked at the pinned
-  ref (a plain `git pull --ff-only` when `JSQL_REF` is empty). A leftover directory
+  ref (a plain `git pull --ff-only` when `JSQL_REF` is empty); the pinned ref is
+  compared against the remote with `git ls-remote`, so a restart at the same ref
+  is a fast no-op. A leftover directory
   that is not a usable git checkout (e.g. an interrupted clone) is replaced by
   cloning into a temporary directory and atomically swapping it in.
 - **Fails loudly.** Any `git clone`/`fetch`/`checkout` failure prints an error to

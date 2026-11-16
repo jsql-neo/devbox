@@ -94,15 +94,44 @@ clone_fresh() {
     fi
 }
 
+# Resolve REF on the remote to a commit sha without downloading objects
+# (ls-remote is a few hundred bytes; fetching every tag is not).
+remote_ref_sha() {
+    local ref="$1" out peeled direct
+    # The peeled line (refs/tags/<ref>^{}) is only advertised together with a
+    # wildcard pattern, so query with one and filter for the exact names.
+    out="$(git ls-remote "$REPO_URL" "refs/tags/$ref*" "refs/heads/$ref*" 2>/dev/null)" || return 1
+    peeled="$(printf '%s\n' "$out" | awk -v t="refs/tags/$ref^{}" '$2 == t {print $1; exit}')"
+    direct="$(printf '%s\n' "$out" | awk -v t="refs/tags/$ref" -v b="refs/heads/$ref" '$2 == t || $2 == b {print $1; exit}')"
+    printf '%s\n' "${peeled:-$direct}"
+}
+
 # Re-point an existing checkout at the pinned ref, or fast-forward it.
 update_existing() {
-    local dest="$1"
+    local dest="$1" want have
     if [ -n "$REF" ]; then
-        log "fetching $REF in $dest"
-        git -C "$dest" fetch --quiet --tags origin \
-            || die "git fetch failed in $dest"
-        git -C "$dest" -c advice.detachedHead=false checkout --quiet "$REF" \
-            || die "cannot check out '$REF' in $dest (dirty tree or missing ref?) — clean the checkout or set JSQL_REF=\"\""
+        want="$(remote_ref_sha "$REF")" \
+            || die "cannot query $REPO_URL for ref '$REF' (network?)"
+        have="$(git -C "$dest" rev-parse HEAD)"
+        if [ -n "$want" ] && [ "$want" = "$have" ]; then
+            log "$dest already at $REF (${have:0:7})"
+            return 0
+        fi
+        if [ -z "$want" ]; then
+            # Not a tag/branch on the remote: allow a raw commit sha.
+            if ! printf '%s' "$REF" | grep -Eq '^[0-9a-fA-F]{7,40}$'; then
+                die "ref '$REF' does not exist in $REPO_URL"
+            fi
+            if [ "${have#$REF}" != "$have" ]; then
+                log "$dest already at commit $REF"
+                return 0
+            fi
+        fi
+        log "updating $dest to $REF${want:+ (${want:0:7})}"
+        git -C "$dest" fetch --quiet --depth 1 origin "$REF" \
+            || die "git fetch of '$REF' failed in $dest"
+        git -C "$dest" -c advice.detachedHead=false checkout --quiet FETCH_HEAD \
+            || die "cannot check out '$REF' in $dest (dirty tree?) — clean the checkout or set JSQL_REF=\"\""
     else
         log "fast-forwarding $dest (default branch HEAD)"
         git -C "$dest" pull --ff-only \
