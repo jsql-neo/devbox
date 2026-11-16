@@ -19,5 +19,12 @@
     }
   },
   "forwardPorts": [3306, 5432, 27017, 6379, 8080],
+  "portsAttributes": {
+    "3306": { "label": "JSQL-NEO MySQL listener (not started by the image)", "onAutoForward": "ignore" },
+    "5432": { "label": "JSQL-NEO PostgreSQL listener (not started by the image)", "onAutoForward": "ignore" },
+    "27017": { "label": "JSQL-NEO MongoDB listener (not started by the image)", "onAutoForward": "ignore" },
+    "6379": { "label": "JSQL-NEO Redis listener (not started by the image)", "onAutoForward": "ignore" },
+    "8080": { "label": "JSQL-NEO HTTP / web UI (not started by the image)", "onAutoForward": "ignore" }
+  },
   "postStartCommand": "bash /usr/local/bin/clone-jsql.sh"
 }
